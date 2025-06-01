@@ -1,0 +1,336 @@
+Affichage de toute la matrice avec 0 pour representer aucune pion
+1 pour le J1
+2 pour le J2
+
+Fct test : 
+
+struct pion {
+    int colonnes
+    int lignes
+}
+
+test_score{
+    4 cas
+    1er : ctr =0 
+        
+
+Si la case est differente de 0 alors on ne peut pas mettre.
+
+Les joueurs ont la possibilité de choisir sur quelle colonnes il mettent leur pion, mais pas la ligne. Les jeton tombent sous principe de gravité et adopte une pour chaque colonnes données une structure de type pile (Meme si, ce n'en est pas vraiment une).
+
+Calcul win Type du joue :
+
+8 direction possible
+
+Local 
+
+
+Test avant le cout: 
+
+Il faut tester si le joueur peut mettre un jeton sur ligne.On ne peut plus mettre de jeton quand toutes les colonnes sont pleines. On doit vérifier pour une 
+
+
+Etape 1: Le menu 
+
+Pour commencer on commence avec un menu qui reprend ce que j'avais fait dans le diagramme d'êtat.
+
+Un controle est effectué au niveau de la saisie pour eviter de prendre des chaines abuser (buffer overlflow). Cependant, le type de saisie n'est pas vraiment controler mais bon ce n'est que le début diancre !
+
+Ajoute aussi une section Règles du jeu voir même changer la taille de la grille
+Etape 2 : La grille 
+
+En s'inspirant d'un ancien TP on peut dessiner la grille dès la fin de la saisie du 1er prompt.
+
+La grille est réalisé à l'aide de '=' pour les lignes et de '|' pour les colonnes. En repétant le même patern suivant : 
+
+for (l = 0; l < j; ++l)
+        {
+            printf("====");
+        }
+        printf("\n");
+        // La première boucle forme la ligne de '='
+        for ( l = 0; l < j; ++l)
+        {
+            printf("| 0 ");
+        }
+        printf("|\n");
+
+On répete ça i fois le nbr de lignes.
+
+Pour améliorer l'affichage l'idée principale est de disocier l'affichage des valeurs d'ecran et l'affichage de la grille
+
+
+Etape 3 : Representation des cases. 
+
+Il faut trouver une structure de données pour représenter les cases de la grille.Le plus simple étant un struct contenant
+Un tableau 2D à lignes*colonnes
+Chaque case du tableau peut prendre 3 valeur.
+0 => Case innocupé
+1=> Case occupé par le J1
+2=> ''' par le J2
+On va donc representer ça par un nombre de type int32
+On va par la même occasion a chaque cas donnée enregistrer ça position (i,j)
+
+On va donc representer tout ça par une structure de type "place". Cette structure se fait pointer par un pointeur double dans une structure nomée "grille". 
+
+Cette structure permet de manipuler toute la grille.
+
+3 fonction permettent pour le moment d'initialiser et de suppr le tout
+
+1 - alloc_grille : Alloue une une structure grille lui associe les lignes et colonnes correspondantes et appelle init grille pour initialiser les cases de la grille
+
+2- init_grille : Dans un 1er temps alloué "lignes" pointeur double de type place . On va comme pour un tab 2D classique bouclé pour faire pointer chaque pointeur dans un autre tab contenant les struct place. On va après initialisé les position et les valeur de chaque case à 0.
+
+3 - free_grille : Bon là c'est classique
+
+Etape 4 : Mouvement du joueur et limites
+
+Le joueur, lorsque c'est son tour. Doit choisir dans quelle colonne il peut mettre son jeton. L'affichage va être amélioré pour représenter les possibilité. Le jeton doit ensuite "Fall" tomber jusqu'a soit atteindre le fond de la grille, ou bien un autre jeton (Toute valeur différente de 0)
+
+Comment faire tout ça ?
+
+1) Pour le placement d'un jeton, on va vérifier pour la colonne donée si la case G->grill_place[0][choix] est vide en vérifiant la value. Si ce n'est pas le cas on l'a met return 1, sinon on augmente d'une ligne. Si en parcourant toutes les lignes il n'est tjr pas possible de mettre le jeton (Toute une colonne occupé). Alors, on signale a l'user qu'il doit choisir une autre colonne => Sous forme d'un while ou for
+
+Cette solution à été mis en place à l'aide de deux fct :
+
+1 - int32_t place_chip(grille* G, int32_t colonnes)
+
+La fonction va placer le jeton, au départ, à la case [ligne_max -1 ][colonnes] (a.k.a le fond de la grille)
+Pour tester si c'est possible, on appelle la fct is_Already_Occupied(G,colonnes,line)
+En fct du resultat 3 outcomes peuvent survenir.
+	1 - Le resultat de la fct booléenne est direct False (Cas colonne vide). On va donc poser le jeton à la pos [ligne_max -1 ][colonnes] via le pionteur de grille. Cela revient à changer la valeur de 0 à 1 (Pour le J1)
+	2 - On boucle un moment dans le while, car la fct booléenne renvoie TRUE. A chaque tour de boucle on décrémente la ligne. Mais enfin de compte, on trouve une case à 0. On va donc se retrouver dans le cas 1.
+	3 - On boucle, mais c'est toujours faux. On sait qu'on à atteint le haut de la grille quand line < 0. A partir de là, une condition if vérifiait que line < 0. Si telle est le cas on arrete.
+On commence à [ligne_max -1 ][colonnes] et on finit à [0][colonnes]
+La fct renvoie 0 si on réussit l'affectation du 1. Et 0, si on est dans le case 3. C'est valeur de retour sont essentielle pour le main (Possible diagramme d'activité)
+
+2 - _Bool is_Already_Occupied
+
+Cette fct vérifie simplement qu'a l'emplacement vérifié que à une valeur diff de 0
+1 si vraie, 0 sinon
+
+Au niveau du main plusieurs do_while sont en place pour repeter en cas d'erreur( Saisie ou de placement)
+
+Cette fonction est passé par 2 (3 potentielle ) version. La 1er telle qu'écrit la deuxième telle qui renvoyait la pos du jeton donc on faisait un test dessus (On est revenue à la 1er version)
+
+3e version: Dans V.3 de cette fonction, l'action de contrôle à été entierement transfére dans is already occupied. Maintenant la fonction verifie si une case est differente de 0 pour poovoir renvoyer le N° de la ligne ou c'est possible. Sinon, on décrémente ligne. On s'arrete si ligne < 0 (ligne vaut -1) place case gère ce cas la en revoyant EXIT_FAILURE. Mais de son côté, il va simplement affecter à la ligne renvoyer par is already occupied le token du joueur. Comme dit l'action de contrôle et et d'affectation ont été séparé
+
+Amelioration:
+
+Pour simplifier le process, on peut rajouter un champ pour assigner à une case le joueur qui l'a mis. De ce fait, on peut plus facilement savoir à qui appartient ce jeton plutôt que d'utiliser des 1 ou des 2. (c'est pas la même chose que ce que tu as fait ?)
+
+
+Etape 5 - Gestion deux joueurs
+
+Pour l'instant on ne peut lancer tout ça qu'une fois (Sauf si on met une boucle pour simuler le jeu). Il faut mettre en place plusieurs requirement pour faire une boucle de jeu à 2 joueurs.
+- Couleurs pour différencier (Opt)
+- Representation 2J dans la grille : Pour l'instant le + simple semble être de considere que le J1 met des jetons "1" dans la grille et le J2 des jetons "2". Faire ainsi exclue tout calcul de win basé sur la somme des valeur des jetons (A moins qu'on mette des enterloupe du style J1 gagne si S = 4 ; J2 gagne si S = 8). On peut aussi penser a représenter les jetons sous forme de symbole.
+Quelle alternatives on a ?
+    - Jeton sous forme de nombres : 1=> J1 , 2=> J2 
+    (Simple, mais... Simple donc on le fait en 1er)
+    - Chaine de caractère : 'J1' et 'J2' L'identification se fait directement
+    (+ Difficile, car cela necessitera de passer par des fct de string.h pour aller + vite, mais surtout ça revient dans les fait à la même chose donc...)
+    - Symbole '*' qui aurait 2 couleurs (Bleu => J1 / Vert => J2). La case en elle-même via le type place aurait une valeur différente en fct de si le joueur J1 ou J2 à décidé de posée le jeton dans une case. 
+    ( Pari risqué à mettre en place dans une V.2)
+
+Dans tous les cas, il faudrat modiff les fct précedentes (Vraisemblablement rajouter un argt et ajouter une condition en fct du joueur) 
+- Boucle alternatif : A un tour de boucle c'est au tour d'un joueur qui peut mettre un token et tour d'après c'est le joueur suivant qui met son toker
+
+Solution chosie: Dans la version actuelle, les deux joueurs sont controler par une var appeller "joueur". Elle vaut 1 par defautl ce qui signifie que le J1 commence tjr en 1er. Cette var est passé en argument dans "place_chip" ce qui permettra d'afficher correctement lequel des deux joueur joue. Cette var passe alternativement de 1 à 2 en fct de la parité du tour de jeu.
+
+Etape 6 : Calcul de win
+
+Un joueur gagne ssi 4 de ces jetons sont aligné selon l'axe i(horizontale), j(vertical) ou i+j/i-j. On n'a donc 4 directions à tester. Plusieurs éléments doivent être pris en compte pour cette fct:
+ - On doit tester à chacun des coup de chaque joueur si ce dernier à gagner. On doit donc lancer le test juste après avoir vérifier puis placer le jeton dans la grile.
+
+(Amélioration possibles : Ne pas boucler au début( 6 première itérations) 
+(car sinon on est juste un cheater) Cela dit, c'est plus compliqué à mettre en place, car dan sl'etat actuel on initialise le nouveau joueur avant le test_win, on teste donc en tant que J2 alors que le J1 à jouer ???. Si on le met après le var_win cela va skipper cette instruction. . Trouver un moyen plus astucieux de determiner quand le joueur va gagner peut être à l'aide d'une fonction analogue à score de la partie II)
+ - Pour optimiser la recherche on teste à partir de là ou on à poser le jeton
+(Amélioration possible : Pour éviter de bouclé effet mémoire ? On retiens dans un dataset les jeton qui sont proches du jeton posé. Cependant, pour eviter de trop consomer en mémoire on vide la liste tous les 3 ou 4 tours. >> Compliqué
+ - On controle à l'honrizontal entre colonne+4 et colonne-4 
+-Pour les lignes de colonne+4 et colonne-4 
+Pour la diagonale x : 
+Pour la diagonale -x : 
+ - On peut aussi pour ce simplifier la vie, charger toute une colonne/ligne/diagonale dans une liste et on regarde si dans cette liste il y a 4 J1 ou 4 J2 d'affilée
+
+Opti 0
+
+Comme en algo, declarer une variable cote de type enum qui fera relancer la meme
+chose dans text_win 
+
+
+Solution implémenter: 
+
+Au niveau du main la boucle de jeu est controler pâr le succès d'un joueur via la variable var_win (Initialisé à 1 au debut). Le cas d'égalité est aussi pris en compte avec la condition "tour < lignes*colonnes".
+
+A chaque tour de boucle on incrémente une var tour. On va skip les 7 premiers tours à des fins d'economie (On evite les 6 premiers appels). 
+
+Au bout du 7eme tour on lance la fonction text_win qui prend en argt la grille et le joueur
+
+Principe de la fct : Après avoir initialiser la position du jeton placé via "actual_pos"
+On va lancer au total 6 boucles de test
+
+Les 2 premieres concernent les lignes et les colonnes. On initialise nos index au debut d'une ligne (i,0) ou d'une colonnes (0,j) et on va parcourir toute la ligne/colonnes en bloquant l'autre indice (i,1) ; (i,2) etc... Idem pour les colonnes. On va continuer le parcours tant que l'on se sors par de la grille une fonction "bord" vérifie si, en fct des nouvelle lignes et colonnes choisie, on peut mettre un jeton.  
+
+Pour chaque case on rappel qu'on a 3 valeur possible (0,1,2). On va par la suite incrémenté une var Sum à chaque fois que une case correspond avec notre n° de joueur. Ainsi, en tant que J1 on ne va sommer uniquement les O et les 1 (Pour le J2 les 0 et les 2). On va ignorer en tant que J1 toutes les cases à 2 (resp 1 pour J2)(Ptit schéma explicatif) . Cependant, un problème est apparu lors de cette implémentation, (voir schéma). Dans cette config le J1 gagne uniquement, car une ligne contient 4 jeton "1" cependant, il ne sont pas aligné.
+
+Pour prendre en compte l'alignement deux sol nous somme venues: Soit on réinitialise la var Sum à 0 dès que l'on rencontre un 0 ou (1 resp(2))
+Soit on interrompt le parcours dès qu'on rencontre un 0 et un 1 via une variable stop. Adopté cette solution recquirt de parcourir dans une seule direction et donc d'ajouter 2 boucles (Mais de taille réduite).
+
+Dans la V.1 de cette fct on adopte la solution.
+
+Pour tester si l'on a ganger on appel la fct win qui (en fct du joueur) s'il a gagné (Le J1 gagne s'il a une somme de 4 tandis que le J2 doit gagner avec une somme de 8).
+Si le Joueur n'a pas gagné lors de son tour on relance la boucle. On sort du test de controle ligne ou colonnes si on sort de la grille lors de la recherche.
+
+On test alors 4 direction (D1,D2,D3,D4). Le fonctionnement de ces fonction est le même: On part de la ou le joueur à placé son jeton et incrémente index_i et index_j en fct de la direction de la diag. De la même manière que les autres fct on s'arrete si on allait tester une case hors-grille. Cela dit, ce type de recherche permet aussi de rajouter une autre condition d'arret. Si le J1 (resp J2) rencontre un 0 ou 2( resp 1). On est sur qu'il ne pourra jamais avoir 4 pions d'affilé (Sinon, on l'aurait deja vu). On arrete donc la boucle en affectant la var "stop" à 0.
+
+Après avoir tester les 6 direction. On est sur que le joueur n'a pas gagné avec son coup
+on return un EXIT_FAILURE qui va relancer la boucle de jeu. 
+1.On choisit ou placer le jeton
+2. On controle la saisie
+3. On pose le jeton 
+4. On controle dans le même temps, si le coup est valide
+5. Affiche la grille 
+6. On teste si le joueur à gagner avec ce coup
+7. On recommence sinon.
+
+Amélioration :
+
+La fct telle qu'implémenter fonctionne. Cela dit, on sent qu'il est possible de gagner en lisibilité pour le developpeur. En effet la
+
+ seule fct test_win fait 219 lignes ! La plupart de ce code est redondant. On peut envisager une factorisation par fonction.
+
+Bon sans doute le truc le 2e truc le plus difficile dans ce projet à avoir codé plus de 3 VERSION !
+
+ssh -p 3000 root@darksrv.netlib.re
+aze
+
+V1 : Test win
+
+La 1er version de test win se fait en 6 passe
+
+
+
+
+
+
+
+Part 2 : Codage de l'I1
+
+Section 1: Representation d'un arbre en C
+
+La structure choisi est un arbre n-aire.L'idée de cette structure nous est venue par la necessité de reprenseter chaque coup que l'IA peut jouer en modélisant ces possibilité, il se dessinent facilement un arbre. 
+
+L'arbre est dit n-aire, car chaque parent/fils peut contenir au plus n colonnes de possibilité à chaque coup. Ainsi pour une grille classique, on obtient à chaque passe de l'IA 7 coup, donc 7 noeuds rataché à un noeud parent.
+
+Pour ce faire un type struct comme ci à été définie 
+
+typedef struct node{
+    int32_t score;
+    place_case* m; 
+    grille *copied_grill; 
+    uint32_t height;
+    struct node* parent;//Le pointeur vers parent est essentielle pour remonter l'info dans Minimax Phase 2
+    struct node* child;
+
+
+}node;
+
+La structure est à chaque fois celle d'un noeud. L'idée d'une structure "tree" qui contiendrait la racine est par corrolaire toute la structure (vu qu'on y accède via son tab) est pour l'instant peut interessante en terme de valeur ajouté (si ce n'est que compter le nombre de noeud ?)
+
+
+
+Cette structure est associé avec une fct alloc\_node qui permet non seulement d'initialiser le champ data, mais aussi le tableau d'enfant. Un noeud à au plus n enfant ou n est le nombres de colonnes de la grille. Ce chiffre peut est moindre, si certaine possibilité sont impossible (Colonnes saturé). 
+
+Que contient le champ data ?
+
+Originelement l'idée était d'incorpoer la position de jeton à poser dans le champ noeud. 
+Cela dit cela pose maintenant plusieurs problèmes.
+
+1 - Vu qu'on alloue en fonction du nombre de colonnes, il n'est pas cohérent d'initialiser à partir de la positon en terme de colonnes. On ne représente pas l'ensemble du possible. Il faut soit choisir une autre manière d'allouer (quelle var utilisé ?) soit changer le data ou les deux.
+
+2- Efficace pour le DFS récursif, sauf qu'on a dit que le récursif ça va être trop lourd.
+
+3 - JSP
+
+2.1.2 : Deep clonning
+
+Un autre point primordiale à observé est la nécessité de connaitre l'etât de la grille du tour i (Quand l'IA se va jouer) aux autres tours jusqu'a i+5 (sinon on le jeu va trop consommer en mémoire). C'est pourquoi on incorpore à la partie data une copie de la grile. oui oui UNE COPIE
+On prend une copie pour ne pas interagir avec la grille du jeux. Ainsi, pour chaque noeud on va copié une image de la grille après actualisation du coup (Sauf pour la racine qui par de ce qui est dejà existant). Cela va néamoins être assez couteux en mémoire. Il faut donc bien veiller a free les grille inutilisé (Fct de suspression de grille avec le noeud)
+
+Mais cette partie est bien plus complexe qu'elle en avait l'air 
+
+
+
+La 1er idée fut d'utiliser memcpy voir même memmove pour copier la grille. Cepedant, (grâce un peu à Java) on s'est rappeler que le champ grille contient un ptr double vers un type struc place case. Si on avait utiliser simplement memcpy, le nouvelle grille aurait pointé sur les mêmes case du tableau orginel ce qui rend completement initule le clonage initiale. C'est pourquoi on utilise le deep clonning. On va manuellement copier les valeurs à l'aide d'une fonction nomé deep_clone qui prend en argt les deux struct et qui copie les donnes de la src vers la dest en allouant cette dernière de la même manière qu'on a allouer la grille de base
+
+
+
+typedef struct node{
+    int32_t score;
+    place_case* m; 
+    grille *copied_grill; 
+    uint32_t height;
+    struct node* parent;//Le pointeur vers parent est essentielle pour remonter l'info dans Minimax Phase 2
+    struct node* child; //Ptr double ou simple ?
+
+
+}node;  
+
+Que contient le champ data (Final)
+
+1. Le score qui aura été passé par les enfant
+2. La position courante du nouveau jeton placé (Utilité encore à définir)
+3. Une copie de la grille, pour voir ou placer les jeton
+4. Un champ représentant l'hauteur de l'arbre. Ce champ sera primordiale pour maitriser la profondeur de l'arborescence 
+5. Un pointeur vers le noeud parent (initialise dans alloc child)
+6. Un tableau de pointeurs pointant vers tous les enfant d'un noeud. Ce tab est determiner par la fonction get child
+
+On initialise un père qui sera la racine.Sa particularité par rappor aux autre noeud étant qu'il n'a pas position et que théoriquement il pourrait pointer directement dans G (au lieu de faire une copie)
+
+
+2.2 : Determiner l'arboresence
+
+Au debut l'idée était de placer le jeton sur la grille en testant via place_case si la pos est valide cependant, on va faire du recursif donc c'est trop couteux en appel.
+A la place nous allons stocker une var pour chaque noeud qui contient la position du coup a jouer (virtuel) pour l'IA 
+Pour representer la position ou l'on place le jeton dans le noeud
+
+Si un fils déboule sur une colonnes pleine on le met a NULL.Toutes les fct regarderont si un Node est a NULL cas d'arret de la fct
+
+Bon plusieurs problèmes dont le 1er est ou je sais comment placer mon pion ???
+
+Il faudrait définir un moyen de determiner à chaque êtat de la grille le nombre de possibilité. Cette recherche peut réutiliser "is\_already\_occupied" dans une boucle de de n colonnes. Pour vérifier le nombre de possibilité pour une ligne donné. (Ca fait néanmoins bcp de tour de boucle, mais c'est le plus efficace).
+
+La 1er êtape consiste à changer le type de retour de place chip (Bool au lieu de place case, on assigne la pos du jeton directement dans la fonction )
+Ensuite, on execute pour la fct get child
+
+Déroulement:  Type void | argt (node* parent,int32_t player) >> Le player peut être déduit de la hauteur
+
+1. On détermine combien d'aenfant on peut générer grâce à get num of child
+    Cette fonction va juste boucler sur toutes les colonnes de la grille et lancé is already occupied seulement pour vérifié s'il ne renvoie pas -1 pour incrémenter le nb d'enfant.
+2 On alloue un tab de child de cette quantité dans G-> copied_grille
+3. Nouvelle boucle pour cette fois ci pour initialiser chaque enfant 
+4. Fonction init_child qui prend en argument la position de où on doit placer le jeton+ le joueur
+Cette fonction change les champs :
+- Height à + 1
+- *parent qui pointe vers le noeud appelant
+- *copied_grille qui clone la grille du parent
+- on place la value joueur directement grâce au indices de place case
+- On met les nombres d'enfant et le pointeur enfant à NULL
+
+
+
+
+
+Section 2.3 : Parcours de l'arbre 
+
+On a desormais une fonction qui permet de generer les enfant d'un noeuds à partir d'une config du jeu
+
+
+Section 2 : Codage du système de score 
+
+
+
+Section 3: Algorithme du minimax 
+
+
